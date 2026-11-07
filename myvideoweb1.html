@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Video World</title>
+
+<style>
+*{box-sizing:border-box}
+html{width:100%;min-width:0;max-width:100%;margin:0;overflow-x:hidden}
+body{width:600px;min-width:600px;max-width:600px;margin:0 auto;background:#0f0f12;color:#fff;font-family:Arial,sans-serif;overflow-x:hidden;zoom:var(--page-zoom,1)}
+body.comment-open{overflow:hidden}
+
+header{width:600px;background:#17171c;padding:12px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:5}
+.logo{font-size:22px;font-weight:bold;color:#ff2d87;white-space:nowrap}
+.search{display:flex;flex:1;min-width:0}
+input{padding:10px;border:1px solid #444;background:#222;color:white;border-radius:20px;min-width:0}
+.search input{width:100%}
+button{border:0;padding:9px 12px;border-radius:22px;background:#292930;color:white;cursor:pointer;white-space:nowrap}
+button:hover{background:#444}
+
+nav{width:600px;display:flex;gap:8px;padding:10px;background:#19191f;overflow:auto}
+.active,.pink{background:#ff2d87!important;color:white}
+
+main{width:600px;min-width:600px;max-width:600px;margin:0;padding:12px}
+.player-section{width:100%}
+
+.video-wrapper{position:relative;width:100%;overflow:hidden;border-radius:12px;background:#000}
+video{display:block;width:100%;background:#000;border-radius:12px;aspect-ratio:16/9;object-fit:cover}
+
+.video-premium{
+position:absolute;z-index:3;top:50%;left:50%;
+transform:translate(-50%,-50%);width:100%;padding:10px;
+text-align:center;background:transparent;border:0;border-radius:0;
+box-shadow:none;color:white;
+}
+.lock-icon{display:block;font-size:30px;margin-bottom:5px}
+.video-premium h3{margin:0 0 7px;color:white;font-size:20px}
+.video-premium p{margin:8px 0;font-size:14px;color:white}
+.unlock-btn{display:inline-block;background:#ff2d87;color:white;padding:12px 25px;margin:10px auto;border-radius:25px;font-size:15px;font-weight:bold;cursor:pointer}
+.unlock-btn:hover{background:#e60070}
+.video-premium .code-text{color:white;text-decoration:none}
+
+h2{font-size:20px}
+.small{font-size:13px;color:#aaa}
+
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}
+.selected{background:#e60023!important;color:white!important}
+
+.channel{display:flex;align-items:center;gap:10px;border-top:1px solid #333;border-bottom:1px solid #333;padding:12px 0}
+.avatar{background:#ff2d87;border-radius:50%;width:42px;height:42px;display:grid;place-items:center;font-weight:bold;flex-shrink:0}
+.channel-info{flex:1}
+.subscribe{background:white;color:#111;font-weight:bold}
+.subscribed{background:#444;color:white}
+
+.panel{background:#202027;padding:14px;border-radius:12px;margin-top:15px}
+.comment-form{display:flex;gap:8px;margin:15px 0}
+.comment-form input{flex:1}
+.comment{border-bottom:1px solid #38383f;padding:12px 0}
+.comment p{margin-left:35px;overflow-wrap:anywhere}
+.comment button{padding:6px 10px;font-size:12px}
+
+.hidden{display:none!important}
+footer{width:600px;text-align:center;color:#aaa;padding:25px;border-top:1px solid #333;margin-top:25px}
+
+.toast{position:fixed;bottom:20px;left:300px;transform:translateX(-50%);background:white;color:black;padding:12px 20px;border-radius:25px;z-index:40;max-width:90%;text-align:center}
+
+.modal-bg{position:fixed;inset:0;background:#000b;display:grid;place-items:center;z-index:20;padding:15px}
+.modal{background:#222;padding:22px;border-radius:14px;width:380px;max-width:100%}
+.modal button{margin:4px}
+
+.comment-backdrop{position:fixed;inset:0;background:#000b;z-index:24;display:none}
+.comment-backdrop.open{display:block}
+
+#commentsSection.drawer-open{
+position:fixed;z-index:25;bottom:0;left:300px;
+transform:translateX(-50%);width:600px;height:min(78vh,750px);
+margin:0;padding:16px;border-radius:18px 18px 0 0;
+background:#202027;display:flex;flex-direction:column;
+box-shadow:0 -8px 35px #0009;
+}
+
+.comment-header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #444;padding-bottom:13px;flex-shrink:0}
+.comment-header h3{margin:0;font-size:19px}
+.close-comments{width:38px;height:38px;padding:0;font-size:25px;border-radius:50%}
+#commentsSection.drawer-open .comment-form{flex-shrink:0}
+#commentsSection.drawer-open #commentList{overflow-y:auto;flex:1;min-height:0}
+#commentsSection.drawer-open #moreBtn{flex-shrink:0;margin-top:10px}
+.comment .reply-text{margin:10px 0 5px 35px;color:#ddd;font-size:14px}
+
+/* MORE VIDEOS */
+.more-videos{margin-top:20px}
+.more-videos h2{margin-bottom:12px}
+.more-grid{
+display:grid;
+grid-template-columns:repeat(3,minmax(0,1fr));
+gap:10px;
+}
+.more-card{background:#202027;border-radius:9px;overflow:hidden;cursor:pointer}
+.more-card video{
+width:100%;
+aspect-ratio:16/9;
+object-fit:cover;
+border-radius:0;
+pointer-events:none;
+background:#000;
+}
+.more-card p{font-size:12px;margin:8px;color:white;overflow-wrap:anywhere}
+.more-card:hover{opacity:.8}
+.more-card.current-video{outline:2px solid #ff2d87}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="logo">▶ Video World</div>
+<div class="search">
+<input id="search" placeholder="Search videos..." onkeydown="if(event.key==='Enter')searchVideos()">
+<button onclick="searchVideos()">Search</button>
+</div>
+<button onclick="showHome()">Home</button>
+</header>
+
+<nav>
+<button onclick="showHome()">Home</button>
+<button onclick="showAll()">Videos</button>
+<button onclick="showTrending()">Trending</button>
+<button onclick="showCategories()">Categories</button>
+<button onclick="openPayment()" class="pink">Premium</button>
+</nav>
+
+<main>
+
+<section id="watchPage">
+<div class="player-section">
+
+<div class="video-wrapper">
+<video id="player" autoplay muted loop playsinline controls>
+<source id="source" src="ganesh1.mp4" type="video/mp4">
+</video>
+
+<div class="video-premium">
+<span class="lock-icon">🔒</span>
+<h3>Premium video</h3>
+<p>Unlock unlimited HD videos no daily limit, no ads.</p>
+<div class="unlock-btn" onclick="openPayment()">Unlock unlimited access</div>
+<p class="code-text">Have an unlock code?</p>
+</div>
+</div>
+
+<h2 id="title">Video 1</h2>
+<div class="small" id="meta">1,24,500 views • 01 Jan 2026 • 02:00</div>
+
+<div class="channel">
+<div class="avatar">VW</div>
+<div class="channel-info">
+<b>Video World Official</b><br>
+<span class="small"><span id="subs">1,000,000</span> subscribers</span>
+</div>
+<button id="subBtn" class="subscribe" onclick="subscribe()">Subscribe</button>
+</div>
+
+<div class="actions">
+<button id="likeBtn" onclick="likeVideo()">👍 <span id="likes">12000</span></button>
+<button id="dislikeBtn" onclick="dislikeVideo()">👎 <span id="dislikes">120</span></button>
+<button onclick="saveMoment()">⏱ Moment</button>
+<button onclick="openComments()">💬 Comment</button>
+<button onclick="downloadVideo()">⬇ Download</button>
+<button onclick="shareVideo()">↗ Share</button>
+</div>
+
+<div class="panel">
+<b>Description</b>
+<p class="small" id="description">Welcome to Video World. Watch videos and enjoy.</p>
+</div>
+
+<div class="panel" id="commentsSection">
+<div class="comment-header">
+<h3><span id="commentCount">400</span> Comments</h3>
+<button class="close-comments" onclick="closeComments()">×</button>
+</div>
+
+<form class="comment-form" onsubmit="postComment(event)">
+<input id="commentInput" placeholder="Add a comment..." required maxlength="500">
+<button class="pink" type="submit">Post</button>
+</form>
+
+<div id="commentList"></div>
+<button id="moreBtn" onclick="showMoreComments()">Show More</button>
+</div>
+
+<section class="more-videos">
+<h2>More Videos</h2>
+<div class="more-grid" id="moreVideosGrid"></div>
+</section>
+
+</div>
+</section>
+
+<section id="listingPage" class="hidden">
+<h2 id="listingTitle">Videos</h2>
+<div id="listingGrid"></div>
+</section>
+
+<section id="categoryPage" class="hidden">
+<h2>Categories</h2>
+<div class="actions">
+<button onclick="filterCategory('Nature')">Nature</button>
+<button onclick="filterCategory('Entertainment')">Entertainment</button>
+<button onclick="filterCategory('Music')">Music</button>
+<button onclick="filterCategory('Education')">Education</button>
+</div>
+<div id="categoryGrid"></div>
+</section>
+
+</main>
+
+<footer>© 2026 Video World</footer>
+
+<div id="commentBackdrop" class="comment-backdrop" onclick="closeComments()"></div>
+<div id="toast" class="toast hidden"></div>
+<div id="modal"></div>
+
+<script>
+"use strict";
+
+const videos=[
+{
+id:1,title:"Video 1",views:124500,
+date:"01 Jan 2026",duration:"02:00",
+category:"Nature",src:"ganesh1.mp4",
+likes:12000,dislikes:120,comments:[],
+viewsAdded:false,reaction:null
+},
+{
+id:2,title:"Video 2",views:0,date:"07 Nov 2026",
+duration:"00:00",category:"Nature",src:"ganesh2.mp4",
+likes:0,dislikes:0,comments:[],viewsAdded:false,reaction:null
+},
+{
+id:3,title:"Video 3",views:0,date:"07 Nov 2026",
+duration:"00:00",category:"Nature",src:"ganesh3.mp4",
+likes:0,dislikes:0,comments:[],viewsAdded:false,reaction:null
+},
+{
+id:4,title:"Video 4",views:0,date:"07 Nov 2026",
+duration:"00:00",category:"Nature",src:"ganesh4.mp4",
+likes:0,dislikes:0,comments:[],viewsAdded:false,reaction:null
+},
+{
+id:5,title:"Video 5",views:0,date:"07 Nov 2026",
+duration:"00:00",category:"Nature",src:"ganesh5.mp4",
+likes:0,dislikes:0,comments:[],viewsAdded:false,reaction:null
+},
+{
+id:6,title:"Video 6",views:0,date:"07 Nov 2026",
+duration:"00:00",category:"Nature",src:"ganesh6.mp4",
+likes:0,dislikes:0,comments:[],viewsAdded:false,reaction:null
+}
+];
+
+let current=videos[0];
+let subscribed=false;
+let visible=10;
+
+function notify(message){
+const t=document.getElementById("toast");
+t.textContent=message;
+t.classList.remove("hidden");
+clearTimeout(window.toastTimer);
+window.toastTimer=setTimeout(()=>t.classList.add("hidden"),2500);
+}
+
+function saveData(){
+try{
+const data={
+subscribed:subscribed,
+videos:videos.map(v=>({
+id:v.id,likes:v.likes,dislikes:v.dislikes,
+comments:v.comments,reaction:v.reaction,
+viewsAdded:v.viewsAdded
+}))
+};
+localStorage.setItem("videoWorldData",JSON.stringify(data));
+}catch(e){notify("Browser storage available nahi hai");}
+}
+
+function loadData(){
+try{
+const data=JSON.parse(localStorage.getItem("videoWorldData")||"{}");
+subscribed=!!data.subscribed;
+(data.videos||[]).forEach(saved=>{
+const v=videos.find(x=>x.id===saved.id);
+if(v){
+v.likes=saved.likes??v.likes;
+v.dislikes=saved.dislikes??v.dislikes;
+v.comments=saved.comments||[];
+v.reaction=saved.reaction||null;
+v.viewsAdded=!!saved.viewsAdded;
+}
+});
+}catch(e){}
+}
+
+function showHome(){
+closeComments();
+document.getElementById("watchPage").classList.remove("hidden");
+document.getElementById("listingPage").classList.add("hidden");
+document.getElementById("categoryPage").classList.add("hidden");
+window.scrollTo(0,0);
+}
+
+function showAll(){showHome()}
+
+function showTrending(){
+closeComments();
+document.getElementById("watchPage").classList.add("hidden");
+document.getElementById("categoryPage").classList.add("hidden");
+document.getElementById("listingPage").classList.remove("hidden");
+document.getElementById("listingTitle").textContent="Trending Videos";
+document.getElementById("listingGrid").innerHTML="<p>Ganesh Video</p>";
+window.scrollTo(0,0);
+}
+
+function showCategories(){
+closeComments();
+document.getElementById("watchPage").classList.add("hidden");
+document.getElementById("listingPage").classList.add("hidden");
+document.getElementById("categoryPage").classList.remove("hidden");
+filterCategory("Nature");
+window.scrollTo(0,0);
+}
+
+function filterCategory(cat){
+const result=videos.filter(v=>v.category===cat);
+document.getElementById("categoryGrid").innerHTML=
+result.length?"<p>Ganesh Video</p>":"<p>No videos found.</p>";
+}
+
+/* CLICK VIDEO - PLAY SELECTED VIDEO */
+function selectVideo(id){
+const selected=videos.find(v=>v.id===id);
+if(!selected)return;
+
+current=selected;
+
+const player=document.getElementById("player");
+document.getElementById("source").src=current.src;
+player.load();
+player.muted=true;
+
+player.play().catch(()=>{
+notify("Video chalane ke liye Play dabayein");
+});
+
+document.getElementById("title").textContent=current.title;
+document.getElementById("meta").textContent=
+current.views.toLocaleString("en-IN")+" views • "+current.date+" • "+current.duration;
+
+document.getElementById("description").textContent=
+current.title+" - Watch this video on Video World.";
+
+updateButtons();
+renderComments();
+renderMoreVideos();
+showHome();
+}
+
+/* SHOW ALL VIDEO CARDS */
+function renderMoreVideos(){
+document.getElementById("moreVideosGrid").innerHTML=
+videos.map(v=>`
+<div class="more-card ${v.id===current.id?"current-video":""}"
+onclick="selectVideo(${v.id})">
+
+<video muted playsinline preload="auto">
+<source src="${escapeHTML(v.src)}" type="video/mp4">
+</video>
+
+<p>${escapeHTML(v.title)}</p>
+</div>
+`).join("");
+
+/* VIDEO PREVIEW FRAME LOAD */
+document.querySelectorAll(".more-card video").forEach(video=>{
+video.addEventListener("loadeddata",function(){
+try{
+video.currentTime=0.1;
+}catch(e){}
+},{once:true});
+
+video.addEventListener("error",function(){
+video.style.background="#111";
+},{once:true});
+
+video.load();
+});
+}
+
+function updateButtons(){
+document.getElementById("likes").textContent=current.likes.toLocaleString("en-IN");
+document.getElementById("dislikes").textContent=current.dislikes.toLocaleString("en-IN");
+document.getElementById("likeBtn").classList.toggle("selected",current.reaction==="like");
+document.getElementById("dislikeBtn").classList.toggle("selected",current.reaction==="dislike");
+document.getElementById("subBtn").textContent=subscribed?"Subscribed":"Subscribe";
+document.getElementById("subBtn").classList.toggle("subscribed",subscribed);
+document.getElementById("subs").textContent=subscribed?"1,000,001":"1,000,000";
+}
+
+function react(type){
+if(current.reaction===type){
+current[type==="like"?"likes":"dislikes"]--;
+current.reaction=null;
+}else{
+if(current.reaction)current[current.reaction==="like"?"likes":"dislikes"]--;
+current[type==="like"?"likes":"dislikes"]++;
+current.reaction=type;
+}
+saveData();
+updateButtons();
+}
+function likeVideo(){react("like")}
+function dislikeVideo(){react("dislike")}
+
+function subscribe(){
+subscribed=!subscribed;
+saveData();
+updateButtons();
+notify(subscribed?"Subscribed":"Unsubscribed");
+}
+
+function openComments(){
+document.getElementById("commentsSection").classList.add("drawer-open");
+document.getElementById("commentBackdrop").classList.add("open");
+document.body.classList.add("comment-open");
+renderComments();
+}
+function closeComments(){
+document.getElementById("commentsSection").classList.remove("drawer-open");
+document.getElementById("commentBackdrop").classList.remove("open");
+document.body.classList.remove("comment-open");
+}
+
+function postComment(e){
+e.preventDefault();
+const input=document.getElementById("commentInput");
+const text=input.value.trim();
+if(!text)return;
+current.comments.unshift({id:Date.now(),text:text,likes:0,liked:false,replies:[]});
+input.value="";
+visible=10;
+saveData();
+renderComments();
+notify("Comment posted");
+}
+
+function renderComments(){
+document.getElementById("commentCount").textContent=
+(400+current.comments.length).toLocaleString("en-IN");
+
+document.getElementById("commentList").innerHTML=
+current.comments.slice(0,visible).map((c,i)=>`
+<div class="comment">
+<b>👤 You</b><span class="small"> • just now</span>
+<p>${escapeHTML(c.text)}</p>
+<button onclick="likeComment(${i})" class="${c.liked?"selected":""}">👍 ${c.likes||0}</button>
+<button onclick="replyComment(${i})">Reply</button>
+<button onclick="deleteComment(${i})">Delete</button>
+${(c.replies||[]).map(r=>`<div class="reply-text">↳ ${escapeHTML(r)}</div>`).join("")}
+</div>`).join("")||"<p class='small'>Abhi koi naya comment nahi hai.</p>";
+
+document.getElementById("moreBtn").classList.toggle("hidden",current.comments.length<=visible);
+}
+
+function escapeHTML(text){
+return String(text).replace(/[&<>"']/g,c=>({
+"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+}[c]));
+}
+
+function likeComment(i){
+const c=current.comments[i];
+if(!c)return;
+c.liked=!c.liked;
+c.likes=(c.likes||0)+(c.liked?1:-1);
+saveData();
+renderComments();
+}
+
+function replyComment(i){
+const r=prompt("Apna reply likhen:");
+if(r&&r.trim()){
+current.comments[i].replies=current.comments[i].replies||[];
+current.comments[i].replies.push(r.trim());
+saveData();
+renderComments();
+}
+}
+
+function deleteComment(i){
+if(confirm("Kya comment delete karna hai?")){
+current.comments.splice(i,1);
+saveData();
+renderComments();
+notify("Comment deleted");
+}
+}
+
+function showMoreComments(){
+visible+=10;
+renderComments();
+}
+
+function saveMoment(){
+const player=document.getElementById("player");
+const time=Math.floor(player.currentTime||0);
+const moment=Math.floor(time/60)+":"+String(time%60).padStart(2,"0");
+notify("Moment saved: "+moment);
+}
+
+function shareVideo(){openPayment()}
+function downloadVideo(){openPayment()}
+
+/* PREMIUM PAYMENT */
+function openPayment(){
+document.getElementById("modal").innerHTML=`
+<div class="modal-bg" onclick="if(event.target===this)closePayment()">
+<div class="modal">
+<h2>Video World Premium</h2>
+<p>Unlock unlimited HD videos</p>
+<p class="small">No daily limit, no ads.</p>
+<p>Choose your plan</p>
+<button onclick="choosePlan(100)">₹100</button>
+<button onclick="choosePlan(150)">₹150</button>
+<button onclick="choosePlan(200)">₹200</button>
+<p id="paymentMessage" class="small">Plan chunen.</p>
+<button onclick="closePayment()">Back</button>
+</div></div>`;
+}
+
+function choosePlan(amount){
+document.getElementById("paymentMessage").textContent=
+"₹"+amount+" plan select hua. Asli payment ke liye UPI payment gateway connect karna zaroori hai.";
+}
+function closePayment(){
+document.getElementById("modal").innerHTML="";
+}
+
+/* VIDEO VIEWS */
+document.getElementById("player").addEventListener("play",function(){
+if(!current.viewsAdded){
+current.views++;
+current.viewsAdded=true;
+document.getElementById("meta").textContent=
+current.views.toLocaleString("en-IN")+" views • "+current.date+" • "+current.duration;
+saveData();
+}
+});
+
+/* SEARCH */
+function searchVideos(){
+const q=document.getElementById("search").value.toLowerCase().trim();
+const result=videos.filter(v=>(v.title+" "+v.category).toLowerCase().includes(q));
+
+closeComments();
+document.getElementById("watchPage").classList.add("hidden");
+document.getElementById("categoryPage").classList.add("hidden");
+document.getElementById("listingPage").classList.remove("hidden");
+document.getElementById("listingTitle").textContent="Search Results";
+
+document.getElementById("listingGrid").innerHTML=
+result.length?result.map(v=>`
+<div class="more-card" onclick="selectVideo(${v.id});">
+<p>${escapeHTML(v.title)}</p>
+</div>
+`).join(""):"<p>No videos found.</p>";
+
+window.scrollTo(0,0);
+}
+
+document.addEventListener("keydown",function(e){
+if(e.key==="Escape"){
+closeComments();
+closePayment();
+}
+});
+
+/* DESKTOP WIDTH */
+function fitWebsite(){
+const pageWidth=600;
+const screenWidth=window.screen.width||600;
+const scale=Math.min(1,screenWidth/pageWidth);
+document.body.style.setProperty("--page-zoom",scale);
+document.body.style.width=pageWidth+"px";
+document.body.style.minWidth=pageWidth+"px";
+document.body.style.maxWidth=pageWidth+"px";
+document.body.style.marginLeft="auto";
+document.body.style.marginRight="auto";
+}
+
+/* WEBSITE START */
+loadData();
+renderComments();
+updateButtons();
+renderMoreVideos();
+showHome();
+fitWebsite();
+
+window.addEventListener("resize",fitWebsite);
+window.addEventListener("orientationchange",fitWebsite);
+
+window.addEventListener("load",function(){
+const player=document.getElementById("player");
+player.muted=true;
+player.play().catch(()=>{});
+});
+</script>
+
+</body>
+</html>
